@@ -15,9 +15,13 @@ Depends on the following NPM packages:
 Getting started
 ---------------
 
-* [Install NodeJS](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
-* Install the dependent modules
+[Install NodeJS](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
+
+Install the dependent modules
     npm install knox node-uuid
-* Plug your S3 credentials and a bucket name into the config section
-* Run it:
+
+
+Plug your S3 credentials and a bucket name into the config section
+
+Run it:
     nodejs snowcannon.js
