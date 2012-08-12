@@ -56,12 +56,12 @@ And finally run it:
 
 ## Performance
 
-Tested this on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 concurrent requests a second before it starts dropping connections.
+Tested on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 concurrent requests a second before it starts dropping connections.
 
 ## Roadmap
 
 * Update the output format
-* Supporting infrastructure of auto-scaling and load balancing
+* Work on supporting infrastructure of auto-scaling and load balancing
 
 ## Copyright and license
 
