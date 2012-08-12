@@ -11,7 +11,7 @@ There are two benefits of using SnowCannon over SnowPlow's existing CloudFront-b
 
 ## How SnowCannon works
 
-In a nutshell: SnowCannon receives events from the [SnowPlow JavaScript tracker] [snowplow-js], sets/updates a third-party user tracking cookie, and logs the event in gzipped files to S3.
+In a nutshell: SnowCannon receives events from the [SnowPlow JavaScript tracker] [snowplow-js], sets/updates a third-party user tracking cookie, and logs the events in gzipped files to Amazon S3.
 
 In pseudocode terms:
 
@@ -23,7 +23,7 @@ In pseudocode terms:
 	    Set the "sp" cookie with a now+1 year cookie expiry
 	    Add the headers and payload to the output array
 	}
-	Every 10 minutes, push the data out to S3 as a gzipped JSON file.
+	Every 10 minutes, push the data out to S3 as a gzipped JSON file
 
 ## Dependencies
 
