@@ -103,7 +103,7 @@ http.createServer(function (request, response) {
 		cookies.sp = uuid.v4();
 	}
 	var date = new Date();
-	requestLog.push(date.toISOString().split('T')[0], date.toISOString().split('T')[1].split('.')[0], cookies.sp, request.url, request.url, cookies, request.headers);
+	requestLog.push(date.toISOString().split('T')[0], date.toISOString().split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
 
  	// Write out the cookie
 	response.writeHead(200, {
@@ -115,8 +115,13 @@ http.createServer(function (request, response) {
 	// Send pixel
 	response.end(imgbuf);
 
-	// Push the log stuff to log
-	log.push(requestLog);
+	// Push the log stuff to log except if the URL is /healthcheck
+	if (request.url === '/healthcheck') {
+		console.log(date.toISOString() + ' /healthcheck');
+	} else {
+		log.push(requestLog);
+	}
+	
 }).listen(80);
 
 // Every n seconds, stuff it down the pipe to the S3 bucket
