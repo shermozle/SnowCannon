@@ -64,7 +64,9 @@ var config = {
 // Pull together the little bit that goes in the cookie string for the domain
 if (config.cookieDomainName !== undefined) {
 	config.cookieString = 'Domain=' + config.cookieDomainName + ';';
-} else config.cookieString = '';
+} else {
+	config.cookieString = '';
+}
 
 var http = require('http');
 var knox = require('knox');
