@@ -62,7 +62,7 @@ You can run a manual check on SnowCannon by loading the following web page in yo
 
     tests/manual/async.html
 
-Use e.g. Chrome Developer Tools to check that `ice.png` is being successfully fetched from your local running SnowCannon on `http://localhost`.
+Use e.g. Chrome Developer Tools to check that `ice.png` is being successfully fetched from your SnowCannon instance running on `http://localhost`.
 
 ## Performance
 
