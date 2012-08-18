@@ -52,7 +52,17 @@ logBucket: {
 
 And finally run it:
 
-    $ nodejs snowcannon.js
+    $ node snowcannon.js
+
+If you are using the default HTTP port 80, you may need to run node using `sudo` (and potentially the full path to your node binary).
+
+## Testing
+
+You can run a manual check on SnowCannon by loading the following web page in your web browser:
+
+    tests/manual/async.html
+
+Use e.g. Chrome Developer Tools to check that `ice.png` is being successfully fetched from your SnowCannon instance running on `http://localhost`.
 
 ## Performance
 
