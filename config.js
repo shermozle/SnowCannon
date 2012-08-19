@@ -39,7 +39,7 @@ config.sink.out = "stdout"; // Or "s3" or "fluentd" (not yet supported)
  */
 
 // How often to push data to S3
-config.sink.s3.flushSeconds = 20;
+config.sink.s3.flushSeconds = 600;
 
 // S3 bucket
 config.sink.s3.bucket = 'S3 BUCKET NAME GOES HERE';
