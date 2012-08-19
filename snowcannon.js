@@ -11,7 +11,7 @@
 
 // SnowCannon
 //
-// Node.js web analytics data collection server. Logs web analytics beacons
+// Node.js web analytics data collection server for SnowPlow. Logs web analytics beacons
 // to gzipped files in S3.
 // By Simon Rumble <simon@simonrumble.com>
 
@@ -20,49 +20,41 @@
 
 // TODO
 //
-// DONE Set cookie to long-expiry
-// DONE P3P header for IE
-// DONE Write out 1x1 transparent GIF
-// DONE Log the HTTP headers
-// DONE Log all the cookies
-// DONE Keep data around for 10 mins and if data, flush to S3
-// DONE Gzip it so we're not spending $$$ storing data we don't need to
-// DONE Get it uploading unique file names. Timestamp + host?
 // Perhaps AWS has a unique name for the host? Maybe call out to shell for `hostname -A`?
 // Put host into the logged output for debugging
 // Make output proper JSON with header names
 // Real-time output
 // Status response for Pingdom et al
 // Get configuration from EC2 variables
-// Configuration options:
-// * S3 bucket and credentials
-// * Domain name for cookie
-// * Real-time destination
-// * Monitoring
-// * Expiry of cookie
 // Build auto scaling
 // Batch job to consolidate all of a day's data into one file for compression optimization
 // SSL support
 
 var http = require('http');
-var uuid = require('node-uuid');
 
 var config = require('./config');
+var cookieManager = require('./libs/cookie-manager');
 var s3Sink = require('./libs/s3-sink');
 
-// 1x1 transparent pixel thanks to sspencer https://gist.github.com/657246
-var imageData = [
-  0x47,0x49, 0x46,0x38, 0x39,0x61, 0x01,0x00, 0x01,0x00, 0x80,0x00, 0x00,0xFF, 0xFF,0xFF,
-  0x00,0x00, 0x00,0x21, 0xf9,0x04, 0x04,0x00, 0x00,0x00, 0x00,0x2c, 0x00,0x00, 0x00,0x00,
-  0x01,0x00, 0x01,0x00, 0x00,0x02, 0x02,0x44, 0x01,0x00, 0x3b
-];
-var imageBuffer = new Buffer(imageData);
+/**
+ * Don't pollute stdout if it's being used to capture
+ * the event stream.
+ */
+var safeLog = function(message) {
+    if (config.sink.out !== "stdout") {
+        console.log(message);
+    }
+}
 
-// Pull together the little bit that goes in the cookie string for the domain
-if (config.cookie.domainName !== undefined) {
-	cookieContents = 'Domain=' + config.cookie.domainName + ';';
-} else {
-	cookieContents = '';
+/**
+ * Build the event to log
+ */
+var buildEvent = function(request, cookies) {
+
+    var event = [], now = new Date();    
+    event.push(now.toISOString().split('T')[0], now.toISOString().split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
+    
+    return event;
 }
 
 // If we are using the S3 sink, set a timeout to stuff the
@@ -75,46 +67,34 @@ if (config.sink.out === "s3") {
 
 // Web server that does the magic
 http.createServer(function (request, response) {
-	var requestLog = [];
 
-	// To get a Cookie
-	var cookies = {};
-  	request.headers.cookie && request.headers.cookie.split(';').forEach(function( cookie ) {
-    	var parts = cookie.split('=');
-    	cookies[ parts[ 0 ].trim() ] = ( parts[ 1 ] || '' ).trim();
-  	});
+    // Switch based on requested URL
+    switch(request.url) {
 
-  	// If there's no "sp" cookie, create a UUID for it
-	if (cookies.sp === undefined) {
-		cookies.sp = uuid.v4();
-	}
-	var date = new Date();
-	requestLog.push(date.toISOString().split('T')[0], date.toISOString().split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
+        case '/ice.png':
+            var cookies = cookieManager.getCookies(request.headers);
+            responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieManager.cookieContents);
 
- 	// Write out the cookie
-	response.writeHead(200, {
- 		'Set-Cookie': 'sp=' + cookies.sp + '; expires='+ new Date(new Date().getTime()+config.cookie.milliseconds).toUTCString() + ';' + cookieContents,
- 		'P3P': 'policyref="/w3c/p3p.xml", CP="NOI DSP COR NID PSA OUR IND COM NAV STA',
- 		'Content-Type': 'image/gif',
-        'Content-Length': imageData.length
-	});
-	// Send pixel
-	response.end(imageBuffer);
+            // Build the event to log
+            var event = buildEvent(request, cookies);
 
-	// Push the log stuff to log except if the URL is /healthcheck
-	if (request.url === '/healthcheck') {
-		if (config.sink.out !== "stdout") { // Don't pollute the stdout event stream
-			console.log(date.toISOString() + ' /healthcheck');
-		}
-	} else {
-		if (config.sink.out === "s3") { // Add to the in-memory log for S3
-		s3Sink.log(requestLog)			
-		} else {
-			var outputLog = JSON.stringify(requestLog);
-			if (config.sink.out === "stdout") { // Print event to stdout
-				console.log(outputLog);
+            // Now log to the appropriate sink
+            if (config.sink.out === "s3") {
+		        s3Sink.log(requestLog)			
+		    } else if (config.sink.out === "stdout") {
+				console.log(JSON.stringify(event));
 			}
-		}
-	}
-	
+            break;
+
+        case '/healthcheck';
+            responses.sendStatus(response);
+            break;
+
+        default:
+            responses.send404(response);
+    }
+
+    // Log the request safely
+    safeLog(date.toISOString() + ' ' + request.url);
+
 }).listen(config.server.httpPort);
