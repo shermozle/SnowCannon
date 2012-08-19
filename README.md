@@ -66,7 +66,7 @@ SnowCannon currently supports two different event sinks:
 
 Another event sink planned (but not yet implemented) is [Fluentd] [fluentd] - where Fluentd will be responsible for uploading the events to S3, Google Storage or equivalent.
 
-You can configure your event sink in the `config.js` file. By default the event sink is set to **stdout**. To change it to **s3**, please set the `sink.out` variable like so:
+You can configure your event sink in the `config.js` file. By default the event sink is set to **stdout**. To change it to **s3**, please set the `config.sink.out` variable like so:
 
     config.sink.out = "s3";
 
@@ -87,7 +87,8 @@ Tested on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 
 
 ## Roadmap
 
-* Update the output format
+* Update the output format (turn it into JSON)
+* Add Fluentd sink support
 * Work on supporting infrastructure of auto-scaling and load balancing
 
 ## Copyright and license
