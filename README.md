@@ -87,7 +87,8 @@ Tested on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 
 
 ## Roadmap
 
-* Update the output format
+* Update the output format (turn it into JSON)
+* Add Fluentd sink support
 * Work on supporting infrastructure of auto-scaling and load balancing
 
 ## Copyright and license
