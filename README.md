@@ -61,7 +61,7 @@ To check this is working:
 
 SnowCannon currently supports two different event sinks:
 
-1. **stdout** - where events (and only events) are printed to `stdout`. You can then use your process control system (e.g. supervisord, daemontools or Angel) to handle the `stdout` eventstream (e.g. uploading it to S3 or Google Storage). This sink is also useful for debugging
+1. **stdout** - where events (and only events) are printed to `stdout`. You can then use your process control system (e.g. supervisord or daemontools) to handle the `stdout` eventstream (e.g. uploading it to S3 or Google Storage). This sink is also useful for debugging
 2. **s3** - where events are collected by SnowCannon, and then regularly gzipped and uploaded to S3 by SnowCannon itself
 
 Another event sink planned (but not yet implemented) is [Fluentd] [fluentd] - where Fluentd will be responsible for uploading the events to S3, Google Storage or equivalent.
