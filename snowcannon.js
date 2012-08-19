@@ -28,7 +28,7 @@
 // DONE Keep data around for 10 mins and if data, flush to S3
 // DONE Gzip it so we're not spending $$$ storing data we don't need to
 // DONE Get it uploading unique file names. Timestamp + host?
-// Perhaps AWS has a unique name for the host?
+// Perhaps AWS has a unique name for the host? Maybe call out to shell for `hostname -A`?
 // Put host into the logged output for debugging
 // Make output proper JSON with header names
 // Real-time output
@@ -44,56 +44,40 @@
 // Batch job to consolidate all of a day's data into one file for compression optimization
 // SSL support
 
-var config = {
-	// Number of milliseconds the cookie will stay around
-	cookieMilliseconds: 31556900000,
-	// If defined, sets the domain name cookies will be set on.
-	// Can be a wildcard e.g. '.foo.com'
-	// If undefined it'll just use the FQDN of the host
-	cookieDomainName: undefined,
-	// How often to push data to S3
-	logFlushSeconds: 600,
-	// S3 bucket details
-	logBucket: {
-		key: 'KEY GOES HERE',
-		secret: 'SECRET GOES HERE',
-		bucket: 'S3 BUCKET NAME GOES HERE'
-	},
-	// HTTP port (useful for reverse proxying)
-	httpPort: 80
-}
-
-// Pull together the little bit that goes in the cookie string for the domain
-if (config.cookieDomainName !== undefined) {
-	config.cookieString = 'Domain=' + config.cookieDomainName + ';';
-} else {
-	config.cookieString = '';
-}
-
 var http = require('http');
-var knox = require('knox');
-var zlib = require('zlib');
 var uuid = require('node-uuid');
-config.uniqueName = uuid.v4();
 
-// Log file array
-var log = [];
+var config = require('./config');
+var s3Sink = require('./libs/s3-sink');
 
 // 1x1 transparent pixel thanks to sspencer https://gist.github.com/657246
-var imgdata = [
+var imageData = [
   0x47,0x49, 0x46,0x38, 0x39,0x61, 0x01,0x00, 0x01,0x00, 0x80,0x00, 0x00,0xFF, 0xFF,0xFF,
   0x00,0x00, 0x00,0x21, 0xf9,0x04, 0x04,0x00, 0x00,0x00, 0x00,0x2c, 0x00,0x00, 0x00,0x00,
   0x01,0x00, 0x01,0x00, 0x00,0x02, 0x02,0x44, 0x01,0x00, 0x3b
 ];
+var imageBuffer = new Buffer(imageData);
 
-var imgbuf = new Buffer(imgdata);
+// Pull together the little bit that goes in the cookie string for the domain
+if (config.cookie.domainName !== undefined) {
+	cookieContents = 'Domain=' + config.cookie.domainName + ';';
+} else {
+	cookieContents = '';
+}
 
+// If we are using the S3 sink, set a timeout to stuff the
+// in-memory events down the pipe to the S3 bucket.
+if (config.sink.out === "s3") {
+	setInterval(function () {
+		s3Sink.upload(config.sink.s3)
+	}, config.sink.s3.flushSeconds * 1000);
+}
 
 // Web server that does the magic
 http.createServer(function (request, response) {
 	var requestLog = [];
 
-	// To Get a Cookie
+	// To get a Cookie
 	var cookies = {};
   	request.headers.cookie && request.headers.cookie.split(';').forEach(function( cookie ) {
     	var parts = cookie.split('=');
@@ -109,51 +93,28 @@ http.createServer(function (request, response) {
 
  	// Write out the cookie
 	response.writeHead(200, {
- 		'Set-Cookie': 'sp=' + cookies.sp + '; expires='+ new Date(new Date().getTime()+config.cookieMilliseconds).toUTCString() + ';' + config.cookieString,
+ 		'Set-Cookie': 'sp=' + cookies.sp + '; expires='+ new Date(new Date().getTime()+config.cookie.milliseconds).toUTCString() + ';' + cookieContents,
  		'P3P': 'policyref="/w3c/p3p.xml", CP="NOI DSP COR NID PSA OUR IND COM NAV STA',
  		'Content-Type': 'image/gif',
-        'Content-Length': imgdata.length
+        'Content-Length': imageData.length
 	});
 	// Send pixel
-	response.end(imgbuf);
+	response.end(imageBuffer);
 
 	// Push the log stuff to log except if the URL is /healthcheck
 	if (request.url === '/healthcheck') {
-		console.log(date.toISOString() + ' /healthcheck');
+		if (config.sink.out !== "stdout") { // Don't pollute the stdout event stream
+			console.log(date.toISOString() + ' /healthcheck');
+		}
 	} else {
-		log.push(requestLog);
+		if (config.sink.out === "s3") { // Add to the in-memory log for S3
+		s3Sink.log(requestLog)			
+		} else {
+			var outputLog = JSON.stringify(requestLog);
+			if (config.sink.out === "stdout") { // Print event to stdout
+				console.log(outputLog);
+			}
+		}
 	}
 	
-}).listen(config.httpPort);
-
-// Every n seconds, stuff it down the pipe to the S3 bucket
-setInterval( function (){
-	if (log.length > 0) {
-		var client = knox.createClient(config.logBucket);
-
-		// Is this a race condition?
-		var outputLog = JSON.stringify(log);
-		console.log('Sending ' + log.length + ' events to S3');
-		log = [];
-
-		// Gzip the output
-		zlib.gzip(outputLog, function(err, buffer) {
-			if (!err) {
-				var date = new Date();
-				var req = client.put(config.uniqueName + '-' + date.toISOString() + '.json.gz', {
-					'Content-Length': buffer.length,
-			 		'Content-Type': 'application/gzip'
-				});
-
-				req.on('response', function(res){
-					if (200 == res.statusCode) {
-						console.log('saved to %s', req.url);
-		 			}
-				});
-				req.end(buffer);
-			}
-		});
-
-
-	}
-}, config.logFlushSeconds * 1000);
+}).listen(config.server.httpPort);

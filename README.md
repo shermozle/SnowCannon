@@ -40,16 +40,6 @@ Next, install the dependent modules:
 
     $ npm install knox node-uuid
 
-Plug your S3 credentials and a bucket name into the config section:
-
-```javascript
-logBucket: {
-		key: 'KEY GOES HERE',
-		secret: 'SECRET GOES HERE',
-		bucket: 'S3 BUCKET NAME GOES HERE'
-	},
-```
-
 And finally run it:
 
     $ node snowcannon.js
@@ -62,7 +52,38 @@ You can run a manual check on SnowCannon by loading the following web page in yo
 
     tests/manual/async.html
 
-Use e.g. Chrome Developer Tools to check that `ice.png` is being successfully fetched from your SnowCannon instance running on `http://localhost`.
+To check this is working:
+
+1. Use e.g. Chrome Developer Tools to check that `ice.png` is being successfully fetched from your SnowCannon instance running on `http://localhost`.
+2. Check that your events are being printed to `stdout` in your terminal running SnowCannon
+
+## Configuring your event sink
+
+SnowCannon currently supports two different event sinks:
+
+1. **stdout** - where events (and only events) are printed to `stdout`. You can then use your process control system (e.g. supervisord or daemontools) to handle the `stdout` eventstream (e.g. uploading it to S3 or Google Storage). This sink is also useful for debugging
+2. **s3** - where events are collected by SnowCannon, and then regularly gzipped and uploaded to S3 by SnowCannon itself
+
+Another event sink planned (but not yet implemented) is [Fluentd] [fluentd] - where Fluentd will be responsible for uploading the events to S3, Google Storage or equivalent.
+
+You can configure your event sink in the `config.js` file. By default the event sink is set to **stdout**. To change it to **s3**, please set the `config.sink.out` variable like so:
+
+```javascript
+config.sink.out = "s3";
+```
+
+And then update the following configuration section:
+
+```javascript
+// S3 bucket name
+config.sink.s3.bucket = 'S3 BUCKET NAME GOES HERE';
+
+// AWS access details
+config.sink.s3.key = process.env.AWS_ACCESS_KEY_ID || 'KEY GOES HERE IF ENV NOT SET';
+config.sink.s3.secret = process.env.AWS_SECRET_KEY || 'SECRET GOES HERE IF ENV NOT SET';
+```
+
+Note that you do not have to add your AWS access details into this file if they are already available to node.js in your shell environment.
 
 ## Performance
 
@@ -70,7 +91,8 @@ Tested on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 
 
 ## Roadmap
 
-* Update the output format
+* Update the output format (turn it into JSON)
+* Add Fluentd event sink support
 * Work on supporting infrastructure of auto-scaling and load balancing
 
 ## Copyright and license
@@ -92,3 +114,4 @@ limitations under the License.
 [node-uuid]: https://github.com/broofa/node-uuid
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [node-install]: https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager
+[fluentd]: http://fluentd.org/
