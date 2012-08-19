@@ -72,6 +72,7 @@ You can configure your event sink in the `config.js` file. By default the event 
 
 And then update the following configuration section:
 
+	// S3 bucket name
 	config.sink.s3.bucket = 'S3 BUCKET NAME GOES HERE';
 
 	// AWS access details
