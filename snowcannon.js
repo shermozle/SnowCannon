@@ -59,6 +59,8 @@ var config = {
 		secret: 'SECRET GOES HERE',
 		bucket: 'S3 BUCKET NAME GOES HERE'
 	},
+	// HTTP port (useful for reverse proxying)
+	httpPort: 80
 }
 
 // Pull together the little bit that goes in the cookie string for the domain
@@ -122,7 +124,7 @@ http.createServer(function (request, response) {
 		log.push(requestLog);
 	}
 	
-}).listen(80);
+}).listen(config.httpPort);
 
 // Every n seconds, stuff it down the pipe to the S3 bucket
 setInterval( function (){
