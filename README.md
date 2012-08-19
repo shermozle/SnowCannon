@@ -68,16 +68,20 @@ Another event sink planned (but not yet implemented) is [Fluentd] [fluentd] - wh
 
 You can configure your event sink in the `config.js` file. By default the event sink is set to **stdout**. To change it to **s3**, please set the `config.sink.out` variable like so:
 
-    config.sink.out = "s3";
+```javascript
+config.sink.out = "s3";
+```
 
 And then update the following configuration section:
 
-	// S3 bucket name
-	config.sink.s3.bucket = 'S3 BUCKET NAME GOES HERE';
+```javascript
+// S3 bucket name
+config.sink.s3.bucket = 'S3 BUCKET NAME GOES HERE';
 
-	// AWS access details
-	config.sink.s3.key = process.env.AWS_ACCESS_KEY_ID || 'KEY GOES HERE IF ENV NOT SET';
-	config.sink.s3.secret = process.env.AWS_SECRET_KEY || 'SECRET GOES HERE IF ENV NOT SET';
+// AWS access details
+config.sink.s3.key = process.env.AWS_ACCESS_KEY_ID || 'KEY GOES HERE IF ENV NOT SET';
+config.sink.s3.secret = process.env.AWS_SECRET_KEY || 'SECRET GOES HERE IF ENV NOT SET';
+```
 
 Note that you do not have to add your AWS access details into this file if they are already available to node.js in your shell environment.
 
