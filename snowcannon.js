@@ -40,9 +40,25 @@ var s3Sink = require('./libs/s3-sink');
  * Don't pollute stdout if it's being used to capture
  * the event stream.
  */
-var safeLog = function(message) {
+var logToConsole = function(message) {
     if (config.sink.out !== "stdout") {
         console.log(message);
+    }
+}
+
+/**
+ * Logs to the current sink, with sink-specific
+ * logging behaviour.
+ */
+var logToSink = function(message) {
+    switch(config.sink.out) {
+        case 's3':
+            s3Sink.log(message);
+            break;
+        case 'stdout':
+            console.log(JSON.stringify(message));
+            break;
+        default:
     }
 }
 
@@ -50,10 +66,8 @@ var safeLog = function(message) {
  * Build the event to log
  */
 var buildEvent = function(request, cookies) {
-
     var event = [], now = new Date();    
     event.push(now.toISOString().split('T')[0], now.toISOString().split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
-    
     return event;
 }
 
@@ -73,28 +87,20 @@ http.createServer(function (request, response) {
 
         case '/ice.png':
             var cookies = cookieManager.getCookies(request.headers);
-            responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieManager.cookieContents);
-
-            // Build the event to log
             var event = buildEvent(request, cookies);
-
-            // Now log to the appropriate sink
-            if (config.sink.out === "s3") {
-		        s3Sink.log(requestLog)			
-		    } else if (config.sink.out === "stdout") {
-				console.log(JSON.stringify(event));
-			}
+            logToSink(event);
+            responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieManager.cookieContents);
             break;
 
         case '/healthcheck';
-            responses.sendStatus(response);
+            responses.send200(response);
             break;
 
         default:
             responses.send404(response);
     }
 
-    // Log the request safely
-    safeLog(date.toISOString() + ' ' + request.url);
+    // Log the request to console
+    logToConsole(date.toISOString() + ' ' + request.url);
 
 }).listen(config.server.httpPort);

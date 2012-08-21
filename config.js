@@ -2,7 +2,6 @@ var config = {};
 
 config.server = {};
 config.cookie = {};
-
 config.sink = {};
 config.sink.s3 = {};
 config.sink.fluentd = {};

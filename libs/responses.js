@@ -19,12 +19,12 @@ responses.send404 = function(response) {
 }
 
 /**
- * Respond with status.
+ * Respond with 200.
  */
 responses.sendStatus = function(response) {
 
     response.writeHead(200, {"Content-Type": "text/plain"});
-    response.write("TODO");
+    response.write("OK");
     response.end();
 }
 
@@ -44,3 +44,7 @@ responses.sendCookieAndPixel = function(response, cookieId, cookieDuration, cook
 	response.end(imageBuffer);
 }
 
+/**
+ * Respond with server status.
+ * NOT YET IMPLEMENTED
+ */
