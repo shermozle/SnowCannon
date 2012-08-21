@@ -87,12 +87,15 @@ http.createServer(function (request, response) {
 
         case '/ice.png':
             var cookies = cookieManager.getCookies(request.headers);
+            var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
+            
             var event = buildEvent(request, cookies);
             logToSink(event);
-            responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieManager.cookieContents);
+            
+            responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieContents);
             break;
 
-        case '/healthcheck';
+        case '/healthcheck':
             responses.send200(response);
             break;
 

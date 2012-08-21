@@ -2,13 +2,6 @@ var uuid = require('node-uuid');
 
 var cookieManager = {};
 
-// Pull together the little bit that goes in the cookie string for the domain
-cookieManager.cookieContents = if (config.cookie.domainName !== undefined) {
-	'Domain=' + config.cookie.domainName + ';';
-} else {
-	'';
-}
-
 /**
  * Returns the cookies broken out
  */
@@ -27,6 +20,21 @@ cookieManager.getCookies = function(headers) {
 	}
 
     return cookies;
+}
+
+// Pull together the little bit that goes in the cookie string for the domain
+
+/**
+ * Returns the cookie contents given the
+ * supplied domain name
+ */
+cookieManager.getCookieContents = function(domainName) {
+	
+	if (domainName !== undefined) {
+		return 'Domain=' + domainName + ';';
+	} else {
+		return '';
+	}
 }
 
 /**
