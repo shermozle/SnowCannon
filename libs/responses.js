@@ -21,7 +21,7 @@ responses.send404 = function(response) {
 /**
  * Respond with 200.
  */
-responses.sendStatus = function(response) {
+responses.send200 = function(response) {
 
     response.writeHead(200, {"Content-Type": "text/plain"});
     response.write("OK");
@@ -48,3 +48,8 @@ responses.sendCookieAndPixel = function(response, cookieId, cookieDuration, cook
  * Respond with server status.
  * NOT YET IMPLEMENTED
  */
+
+/**
+ * All important export of responses.
+ */
+module.exports = responses;

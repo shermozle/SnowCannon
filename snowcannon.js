@@ -31,9 +31,11 @@
 // SSL support
 
 var http = require('http');
+var url = require('url');
 
 var config = require('./config');
 var cookieManager = require('./libs/cookie-manager');
+var responses = require('./libs/responses');
 var s3Sink = require('./libs/s3-sink');
 
 /**
@@ -65,9 +67,9 @@ var logToSink = function(message) {
 /**
  * Build the event to log
  */
-var buildEvent = function(request, cookies) {
-    var event = [], now = new Date();    
-    event.push(now.toISOString().split('T')[0], now.toISOString().split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
+var buildEvent = function(request, cookies, timestamp) {
+    var event = [];    
+    event.push(timestamp.split('T')[0], timestamp.split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
     return event;
 }
 
@@ -82,16 +84,19 @@ if (config.sink.out === "s3") {
 // Web server that does the magic
 http.createServer(function (request, response) {
 
+    // Timestamp for this request
+    var now = new Date().toISOString();
+
     // Switch based on requested URL
-    switch(request.url) {
+    switch(url.parse(request.url).pathname) {
 
         case '/ice.png':
             var cookies = cookieManager.getCookies(request.headers);
             var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
             
-            var event = buildEvent(request, cookies);
+            var event = buildEvent(request, cookies, now);
             logToSink(event);
-            
+
             responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieContents);
             break;
 
@@ -104,6 +109,6 @@ http.createServer(function (request, response) {
     }
 
     // Log the request to console
-    logToConsole(date.toISOString() + ' ' + request.url);
+    logToConsole(now + ' ' + request.url);
 
 }).listen(config.server.httpPort);

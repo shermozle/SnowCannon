@@ -38,7 +38,6 @@ cookieManager.getCookieContents = function(domainName) {
 }
 
 /**
- * All-important export of s3Sink.
+ * All-important export of cookieManager.
  */
 module.exports = cookieManager;
-
