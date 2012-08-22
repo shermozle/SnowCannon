@@ -25,18 +25,16 @@
 
 // TODO
 //
-// Perhaps AWS has a unique name for the host? Maybe call out to shell for `hostname -A`?
 // Put host into the logged output for debugging
 // Make output proper JSON with header names
+// Add in fluentd support
 // Real-time output
-// Status response for Pingdom et al
-// Get configuration from EC2 variables
 // Build auto scaling
-// Batch job to consolidate all of a day's data into one file for compression optimization
-// SSL support
 
 var http = require('http');
 var url = require('url');
+var os = require('os');
+
 var measured = require('measured');
 
 var config = require('./config');
@@ -66,6 +64,7 @@ var logToSink = function(message) {
         case 'stdout':
             console.log(JSON.stringify(message));
             break;
+        // TODO: add in fluentd support here
         default:
     }
 }
@@ -75,7 +74,7 @@ var logToSink = function(message) {
  */
 var buildEvent = function(request, cookies, timestamp) {
     var event = [];    
-    event.push(timestamp.split('T')[0], timestamp.split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
+    event.push(hostname, timestamp.split('T')[0], timestamp.split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
     return event;
 }
 
@@ -86,6 +85,9 @@ if (config.sink.out === "s3") {
 		s3Sink.upload(config.sink.s3)
 	}, config.sink.s3.flushSeconds * 1000);
 }
+
+// Get the hostname
+var hostname = os.hostname();
 
 // Setup our server monitoring
 var stats = measured.createCollection();
@@ -123,7 +125,7 @@ http.createServer(function (request, response) {
             break;
 
         case '/status':
-            responses.sendStatus(response, stats, memory, uptime);
+            responses.sendStatus(response, hostname, stats, memory, uptime);
             break;
 
         default:
