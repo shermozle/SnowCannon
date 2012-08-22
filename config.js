@@ -2,7 +2,6 @@ var config = {};
 
 config.server = {};
 config.cookie = {};
-
 config.sink = {};
 config.sink.s3 = {};
 config.sink.fluentd = {};
@@ -63,6 +62,6 @@ config.sink.fluentd.port = 24224;
 config.sink.fluentd.timeout = 3.0;
 
 /**
- * All important export of config.
+ * All-important export of config.
  */
 module.exports = config;
