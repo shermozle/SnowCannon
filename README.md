@@ -31,6 +31,7 @@ SnowCannon depends on the following NPM packages:
 
 * [knox] [knox], an Amazon S3 library
 * [node-uuid] [node-uuid], generates UUIDs for user tracking
+* [measured] [measured], for server status monitoring
 
 ## Getting started
 
@@ -38,7 +39,7 @@ First, you need to [install Node.js] [node-install].
 
 Next, install the dependent modules:
 
-    $ npm install knox node-uuid
+    $ npm install knox node-uuid measured
 
 And finally run it:
 
@@ -112,6 +113,7 @@ limitations under the License.
 [snowplow-js]: https://github.com/snowplow/snowplow/tree/master/1-trackers/javascript
 [knox]: https://github.com/learnboost/knox
 [node-uuid]: https://github.com/broofa/node-uuid
+[measured]: https://npmjs.org/package/measured
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [node-install]: https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager
 [fluentd]: http://fluentd.org/
