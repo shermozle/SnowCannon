@@ -1,6 +1,4 @@
 /**
- * Copyright (c) 2012 Simon Rumble. All rights reserved.
- *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
  * You may obtain a copy of the Apache License Version 2.0 at http: *www.apache.org/licenses/LICENSE-2.0.
@@ -17,19 +15,9 @@
  * node.js web analytics data collection server for SnowPlow.
  * Logs web analytics beacons to gzipped files in S3.
  *
- * By Simon Rumble <simon@simonrumble.com>
- *
  * Depends on the following NPM packages:
  * npm install knox node-uuid measured
  */
-
-// TODO
-//
-// Put host into the logged output for debugging
-// Make output proper JSON with header names
-// Add in fluentd support
-// Real-time output
-// Build auto scaling
 
 var http = require('http');
 var url = require('url');
@@ -54,7 +42,8 @@ var logToConsole = function(message) {
 
 /**
  * Logs to the current sink, with sink-specific
- * logging behaviour.
+ * logging behaviour. Splits each request with
+ * a line break
  */
 var logToSink = function(message) {
     switch(config.sink.out) {
@@ -78,8 +67,10 @@ var buildEvent = function(request, cookies, timestamp) {
     return event;
 }
 
-// If we are using the S3 sink, set a timeout to stuff the
-// in-memory events down the pipe to the S3 bucket.
+/**
+* If we are using the S3 sink, set a timeout to stuff the
+* in-memory events down the pipe to the S3 bucket.
+*/
 if (config.sink.out === "s3") {
 	setInterval(function () {
 		s3Sink.upload(config.sink.s3)
@@ -111,6 +102,7 @@ http.createServer(function (request, response) {
     switch(url.parse(request.url).pathname) {
 
         case '/ice.png':
+		case '/i':
             var cookies = cookieManager.getCookies(request.headers);
             var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
             
