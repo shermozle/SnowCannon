@@ -1,11 +1,16 @@
 var uuid = require('node-uuid');
 var knox = require('knox');
 var zlib = require('zlib');
+var os = require("os");
 
 var s3Sink = {};
 
 // To identify this server's files.
-var uniqueName = uuid.v4();
+if (os.hostname()) {
+	uniqueName = os.hostname();
+} else {
+	uniqueName = uuid.v4();
+}
 
 // Log file array for S3
 var s3Log = "";
@@ -26,13 +31,13 @@ s3Sink.log = function(event) {
 s3Sink.upload = function(config) {
 	if (s3Log.length > 0) {
 		var client = knox.createClient(config);
-		console.log(s3Log);
 		// TODO: is this a race condition?
 		console.log('Sending ' + s3Log.split("\n").length + ' events to S3 ' + uniqueName);
+		var outputLog = s3Log;
 		s3Log = [];
 
 		// Gzip the output
-		zlib.gzip(s3Log, function(err, buffer) {
+		zlib.gzip(outputLog, function(err, buffer) {
 			if (!err) {
 				var date = new Date();
 				var req = client.put(uniqueName + '-' + date.toISOString() + '.json.gz', {
@@ -46,6 +51,9 @@ s3Sink.upload = function(config) {
 		 			} else {
 		 				console.log('Saving to S3 failed statusCode: ' + res.statusCode)
 		 			}
+				});
+				req.on('error', function(err){
+				    console.log("S3 Error: " +  err);
 				});
 				req.end(buffer);
 			}

@@ -63,7 +63,15 @@ var logToSink = function(message) {
  */
 var buildEvent = function(request, cookies, timestamp) {
     var event = [];    
-    event.push(hostname, timestamp.split('T')[0], timestamp.split('T')[1].split('.')[0], cookies.sp, request.url, cookies, request.headers);
+    event.push( {
+        "hostname" : hostname,
+        "date" : timestamp.split('T')[0],
+        "time" : timestamp.split('T')[1].split('.')[0],
+        "uuid" : cookies.sp,
+        "url" : request.url,
+        "cookies" : cookies,
+        "headers" : request.headers
+    });
     return event;
 }
 
