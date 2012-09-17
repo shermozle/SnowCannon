@@ -102,7 +102,7 @@ To change the event sink to **fluentd**, please set the `config.sink.out` variab
 config.sink.out = "fluentd";
 ```
 
-Depending on how Fluentd is configured, you should be able to leave the `config.sink.fluentd` variables as you find them. They correspond to the Fluentd default configuration found in:
+Depending on how Fluentd is configured, you should be able to leave the `config.sink.fluentd` variables untouched - they correspond to the Fluentd default configuration found in:
 
     fluentd/fluent.conf
 
@@ -135,3 +135,4 @@ limitations under the License.
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [node-install]: https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager
 [fluentd]: http://fluentd.org/
+[fluent-logger]: https://github.com/yssk22/fluent-logger-node
