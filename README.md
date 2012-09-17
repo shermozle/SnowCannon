@@ -6,7 +6,7 @@ SnowCannon is a Node.js web analytics data collection server for [SnowPlow] [sno
 
 There are two benefits of using SnowCannon over SnowPlow's existing CloudFront-based collector:
 
-1. Allows use of a third-party cookie, making tracking across domains possible for all except mobile Safari. This is something even the Google Analytics JS-set cookies approach struggles with
+1. Allows use of a third-party cookie, making user tracking across domains possible for all except mobile Safari. This is something even the Google Analytics JS-set cookies approach struggles with
 2. Enables real-time analytics, if you want it. CloudFront has 10-20 minute delays to get the logs into S3
 
 ## How SnowCannon works
@@ -31,7 +31,8 @@ SnowCannon depends on the following NPM packages:
 
 * [knox] [knox], an Amazon S3 library
 * [node-uuid] [node-uuid], generates UUIDs for user tracking
-* [measured] [measured], for server status monitoring
+* [measured] [measured], for SnowCannon performance metrics
+* [fluent-logger] [fluent-logger], for logging events to [Fluentd] [fluentd]
 
 ## Getting started
 
@@ -39,13 +40,13 @@ First, you need to [install Node.js] [node-install].
 
 Next, install the dependent modules:
 
-    $ npm install knox node-uuid measured
+    $ npm install knox node-uuid measured fluent-logger
 
 And finally run it:
 
     $ node snowcannon.js
 
-If you are using the default HTTP port 80, you may need to run node using `sudo` (and potentially the full path to your node binary).
+If you are using the default HTTP port 80, you may need to run node using `sudo` (and potentially supply the full path to your node binary).
 
 ## Testing
 
@@ -60,14 +61,21 @@ To check this is working:
 
 ## Configuring your event sink
 
-SnowCannon currently supports two different event sinks:
+SnowCannon supports three different event sinks:
 
 1. **stdout** - where events (and only events) are printed to `stdout`. You can then use your process control system (e.g. supervisord or daemontools) to handle the `stdout` eventstream (e.g. uploading it to S3 or Google Storage). This sink is also useful for debugging
 2. **s3** - where events are collected by SnowCannon, and then regularly gzipped and uploaded to S3 by SnowCannon itself
+3. **fluentd** - where events are sent by SnowCannon to [Fluentd] [fluentd], a lightweight log collector. Fluentd is then responsible for uploading the events to S3, Google Storage or equivalent
 
-Another event sink planned (but not yet implemented) is [Fluentd] [fluentd] - where Fluentd will be responsible for uploading the events to S3, Google Storage or equivalent.
+You can configure your event sink in the `config.js` file - to take each sink option in turn:
 
-You can configure your event sink in the `config.js` file. By default the event sink is set to **stdout**. To change it to **s3**, please set the `config.sink.out` variable like so:
+### stdout
+
+SnowCannon's event sink is set to **stdout** by default - you don't need to change anything to use this sink.
+
+### s3
+
+To change the event sink to **s3**, please set the `config.sink.out` variable like so:
 
 ```javascript
 config.sink.out = "s3";
@@ -86,14 +94,24 @@ config.sink.s3.secret = process.env.AWS_SECRET_KEY || 'SECRET GOES HERE IF ENV N
 
 Note that you do not have to add your AWS access details into this file if they are already available to node.js in your shell environment.
 
+### fluentd
+
+To change the event sink to **fluentd**, please set the `config.sink.out` variable like so:
+
+```javascript
+config.sink.out = "fluentd";
+```
+
+Depending on how Fluentd is configured, you should be able to leave the `config.sink.fluentd` variables as you find them. They correspond to the Fluentd default configuration found in:
+
+    fluentd/fluent.conf
+
 ## Performance
 
 Tested on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 concurrent requests a second before it starts dropping connections.
 
 ## Roadmap
 
-* Update the output format (turn it into JSON)
-* Add Fluentd event sink support
 * Work on supporting infrastructure of auto-scaling and load balancing
 
 ## Copyright and license
