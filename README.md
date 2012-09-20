@@ -34,6 +34,8 @@ SnowCannon depends on the following NPM packages:
 * [measured] [measured], for SnowCannon performance metrics
 * [fluent-logger] [fluent-logger], for logging events to [Fluentd] [fluentd]
 
+Note that _using_ Fluentd for logging is optional - but the dependency is required.
+
 ## Getting started
 
 First, you need to [install Node.js] [node-install].
