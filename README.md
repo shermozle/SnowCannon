@@ -116,14 +116,12 @@ Tested on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 
 
 ## Deploying to production
 
-When deploying node.js apps to production, it is [generally recommended] [node.js-deployment] that you additionally setup:
+When deploying node.js apps to production, it is [generally recommended] [node-js-deployment] that you additionally setup:
 
 1. A **service wrapper** - e.g. Forever or Upstart. description to come
 2. A **process monitor** - e.g. Monit description to come
 
-Setting up a service wrapper and process monitor is out of scope of this README; however there is a
-
-It is recommended that you setup a service
+Setting up a service wrapper and process monitor is out of scope of this README; however the SnowPlow team have included instructions on setting up **Forever** and **Monit** as part of their this as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide].
 
 ## Roadmap
 
