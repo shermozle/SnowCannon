@@ -104,13 +104,26 @@ To change the event sink to **fluentd**, please set the `config.sink.out` variab
 config.sink.out = "fluentd";
 ```
 
-Depending on how Fluentd is configured, you should be able to leave the `config.sink.fluentd` variables untouched - they correspond to the Fluentd default configuration found in:
+Depending on how you have configured Fluentd is configured, you should be able to leave the `config.sink.fluentd` variables untouched - they correspond to the Fluentd default configuration found in:
 
     fluentd/fluent.conf
+
+Please note that setting up and configuring Fluentd is out of scope of this README - but the SnowPlow team have included instructions on this as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide].
 
 ## Performance
 
 Tested on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 concurrent requests a second before it starts dropping connections.
+
+## Deploying to production
+
+When deploying node.js apps to production, it is [generally recommended] [node.js-deployment] that you additionally setup:
+
+1. A **service wrapper** - e.g. Forever or Upstart. description to come
+2. A **process monitor** - e.g. Monit description to come
+
+Setting up a service wrapper and process monitor is out of scope of this README; however there is a
+
+It is recommended that you setup a service
 
 ## Roadmap
 
