@@ -121,7 +121,7 @@ When deploying node.js apps to production, it is [generally recommended] [node-j
 1. A **service wrapper** - e.g. Forever or Upstart. description to come
 2. A **process monitor** - e.g. Monit description to come
 
-Setting up a service wrapper and process monitor is out of scope of this README; however the SnowPlow team have included instructions on setting up **Forever** and **Monit** as part of their this as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide].
+Setting up a service wrapper and process monitor is out of scope of this README; however the SnowPlow team have included instructions on setting up **Forever** and **Monit** as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide].
 
 ## Roadmap
 
