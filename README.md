@@ -151,3 +151,5 @@ limitations under the License.
 [node-install]: https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager
 [fluentd]: http://fluentd.org/
 [fluent-logger]: https://github.com/yssk22/fluent-logger-node
+[snowcannon-setup-guide]: https://github.com/snowplow/snowplow/wiki/SnowCannon-setup-guide
+[node-js-deployment]: http://stackoverflow.com/questions/4681067/how-to-deploy-node-js
