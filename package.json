@@ -11,6 +11,13 @@
     "type": "git",
     "url": "git://github.com/shermozle/SnowCannon.git"
   },
+  "keywords": [
+    "analytics",
+    "snowplow",
+    "web analytics",
+    "clickstream",
+    "events"
+  ],
   "dependencies": {
     "cluster": "0.7.x",
     "measured": "0.1.x",
