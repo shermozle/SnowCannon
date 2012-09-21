@@ -22,6 +22,7 @@ var http = require('http');
 var url = require('url');
 var os = require('os');
 
+var cluster = require('cluster');
 var measured = require('measured');
 var fluentdSink = require('fluent-logger');
 
@@ -114,7 +115,12 @@ var hostname = os.hostname();
 // Identify this collector
 var collector = pjson.name + "-" + pjson.version
 
-// Setup our server monitoring
+// How many CPUs?
+var numCPUs = os.cpus().length;
+
+/**
+ * Setup our server monitoring
+ */
 var monitoring = {
     "stats": measured.createCollection(),
     "memory": new measured.Gauge(function() {
@@ -125,43 +131,58 @@ var monitoring = {
     })
 }
 
-// Web server that does the magic
-http.createServer(function (request, response) {
-
-    // Timestamp for this request
-    var now = new Date().toISOString();
-
-    // Add to metrics
-    monitoring.stats.meter('requestsPerSecond').mark();
-
-    // Switch based on requested URL
-    switch(url.parse(request.url).pathname) {
-
-        // ice.png is legacy name for i
-        case '/ice.png':
-		case '/i':
-            var cookies = cookieManager.getCookies(request.headers);
-            var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
-            
-            var event = buildEvent(request, cookies, now);
-            logToSink(event);
-
-            responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieContents);
-            break;
-
-        case '/healthcheck':
-            responses.send200(response);
-            break;
-
-        case '/status':
-            responses.sendStatus(response, hostname, collector, monitoring);
-            break;
-
-        default:
-            responses.send404(response);
+/**
+ * Roll our own clustering
+ */
+if (cluster.isMaster) {
+    // Fork workers
+    for (var i = 0; i < numCPUs; i++) {
+        cluster.fork();
     }
+    cluster.on('exit', function(worker, code, signal) {
+        logToConsole('SnowCannon worker ' + worker.pid + ' died');
+    });
 
-    // Log the request to console
-    logToConsole(now + ' ' + request.url);
+} else {
+    // Workers can share any TCP connection
+    // In this case its a HTTP server
+    http.createServer(function (request, response) {
 
-}).listen(config.server.httpPort);
+        // Timestamp for this request
+        var now = new Date().toISOString();
+
+        // Add to metrics
+        monitoring.stats.meter('requestsPerSecond').mark();
+
+        // Switch based on requested URL
+        switch(url.parse(request.url).pathname) {
+
+            // ice.png is legacy name for i
+            case '/ice.png':
+    		case '/i':
+                var cookies = cookieManager.getCookies(request.headers);
+                var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
+                
+                var event = buildEvent(request, cookies, now);
+                logToSink(event);
+
+                responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieContents);
+                break;
+
+            case '/healthcheck':
+                responses.send200(response);
+                break;
+
+            case '/status':
+                responses.sendStatus(response, hostname, collector, numCPUs, monitoring);
+                break;
+
+            default:
+                responses.send404(response);
+        }
+
+        // Log the request to console
+        logToConsole(now + ' ' + request.url);
+
+    }).listen(config.server.httpPort);
+}

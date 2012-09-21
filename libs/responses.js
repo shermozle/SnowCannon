@@ -48,13 +48,14 @@ responses.sendCookieAndPixel = function(response, cookieId, cookieDuration, cook
  * Respond with server status.
  * Using measured library
  */
-responses.sendStatus = function(response, hostname, collector, monitoring) {
+responses.sendStatus = function(response, hostname, collector, numCPUs, monitoring) {
 
     var status = monitoring.stats.toJSON();
     status.memoryUsage = monitoring.memory.toJSON();
     status.uptime = monitoring.uptime.toJSON();
     status.hostname = hostname;
-    status.collector = collector
+    status.collector = collector;
+    status.numCPUs = numCPUs;
 
     response.writeHead(200, {"Content-Type": "application/json"});
     response.write(JSON.stringify(status));

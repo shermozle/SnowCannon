@@ -29,6 +29,7 @@ In pseudocode terms:
 
 SnowCannon depends on the following NPM packages:
 
+* [cluster] [cluster], creates workers to exploit multi-core servers
 * [knox] [knox], an Amazon S3 library
 * [node-uuid] [node-uuid], generates UUIDs for user tracking
 * [measured] [measured], for SnowCannon performance metrics
@@ -148,6 +149,7 @@ limitations under the License.
 [cloudfront-collector]: https://github.com/snowplow/snowplow/tree/master/2-collectors/cloudfront-collector
 [knox]: https://github.com/learnboost/knox
 [node-uuid]: https://github.com/broofa/node-uuid
+[cluster]: https://npmjs.org/package/cluster
 [measured]: https://npmjs.org/package/measured
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [node-install]: https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager
