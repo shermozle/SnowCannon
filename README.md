@@ -41,9 +41,11 @@ Note that _using_ Fluentd or Knox for logging is optional - but the dependencies
 
 First, you need to [install Node.js] [node-install].
 
-Next, install SnowCannon:
+Now checkout and install SnowCannon:
 
-    $ npm install snowcannon
+	$ git clone git://github.com/shermozle/SnowCannon.git
+	$ cd SnowCannon
+    $ npm install .
 
 And finally run it:
 
