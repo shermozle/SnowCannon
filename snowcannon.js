@@ -16,14 +16,14 @@
  * Logs web analytics beacons to gzipped files in S3.
  *
  * Depends on the following NPM packages:
- * npm install knox node-uuid measured
+ * npm install knox node-uuid measured fluent-logger
  */
-
 var http = require('http');
 var url = require('url');
 var os = require('os');
 
 var measured = require('measured');
+var fluentdSink = require('fluent-logger');
 
 var config = require('./config');
 var cookieManager = require('./libs/cookie-manager');
@@ -46,14 +46,19 @@ var logToConsole = function(message) {
  * a line break
  */
 var logToSink = function(message) {
+    var json = JSON.stringify(message);
     switch(config.sink.out) {
         case 's3':
-            s3Sink.log(message);
+            s3Sink.log(json);
             break;
         case 'stdout':
-            console.log(JSON.stringify(message));
+            console.log(json);
             break;
-        // TODO: add in fluentd support here
+        case 'fluentd':
+            fluentdSink.emit(
+                config.sink.fluentd.subTag,
+                json
+            );
         default:
     }
 }
@@ -76,13 +81,27 @@ var buildEvent = function(request, cookies, timestamp) {
 }
 
 /**
-* If we are using the S3 sink, set a timeout to stuff the
-* in-memory events down the pipe to the S3 bucket.
-*/
-if (config.sink.out === "s3") {
-	setInterval(function () {
-		s3Sink.upload(config.sink.s3)
-	}, config.sink.s3.flushSeconds * 1000);
+ * One-time initialization for each sink type
+ */
+switch(config.sink.out) {
+    case 's3':
+        // Set a timeout to stuff the in-memory
+        // events down the pipe to the S3 bucket.
+        setInterval(function () {
+            s3Sink.upload(config.sink.s3)
+        }, config.sink.s3.flushSeconds * 1000);    
+        break;
+    case 'stdout':
+        // No init needed
+        break;
+    case 'fluentd':
+        // Configure the Fluentd logger
+        fluentdSink.configure(config.sink.fluentd.mainTag, {
+            host: config.sink.fluentd.host,  
+            port: config.sink.fluentd.port,
+            timeout: config.sink.fluentd.timeout
+        });
+    default:
 }
 
 // Get the hostname
