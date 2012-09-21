@@ -108,7 +108,7 @@ Depending on how you have configured Fluentd is configured, you should be able t
 
     etc/fluentd/fluent.conf
 
-Please note that setting up and configuring Fluentd is out of scope of this README - but the SnowPlow team have included instructions on this as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide].
+Please note that setting up and configuring Fluentd is out of scope of this README - but the SnowPlow team has included instructions on this as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide].
 
 ## Performance
 
@@ -121,7 +121,7 @@ When deploying node.js apps to production, it is [generally recommended] [node-j
 1. A **service wrapper** - e.g. [Upstart] [upstart] or [Forever] [forever]. A service wrapper runs SnowCannon in a separate process and restarts SnowCannon if it dies
 2. A **process monitor** - e.g. [Monit] [monit] or [God] [god]. A utility for monitoring and managing processes; use it to send a simple HTTP request to SnowCannon and restart SnowCannon if it does not respond
 
-Setting up a service wrapper and process monitor is out of scope of this README; however the SnowPlow team have included instructions on setting up **Upstart** and **Monit** as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide]. Default Upstart and Monit configuration files can be found here:
+Setting up a service wrapper and process monitor is out of scope of this README; however the SnowPlow team has included instructions on setting up **Upstart** and **Monit** as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide]. Default Upstart and Monit configuration files can be found here:
 
     etc/monit/monit.conf
     etc/upstart/snowcannon.conf
