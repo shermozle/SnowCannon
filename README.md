@@ -2,9 +2,9 @@
 
 ## Introduction
 
-SnowCannon is a Node.js web analytics data collection server for [SnowPlow] [snowplow], by Simon Rumble <simon@simonrumble.com>.
+SnowCannon is an event collector server for [SnowPlow] [snowplow], written in node.js by Simon Rumble <simon@simonrumble.com>.
 
-There are two benefits of using SnowCannon over SnowPlow's existing CloudFront-based collector:
+There are two benefits of using SnowCannon over SnowPlow's [CloudFront-based collector] [cloudfront-collector]:
 
 1. Allows use of a third-party cookie, making user tracking across domains possible for all except mobile Safari. This is something even the Google Analytics JS-set cookies approach struggles with
 2. Enables real-time analytics, if you want it. CloudFront has 10-20 minute delays to get the logs into S3
@@ -65,9 +65,9 @@ To check this is working:
 
 SnowCannon supports three different event sinks:
 
-1. **stdout** - where events (and only events) are printed to `stdout`. You can then use your process control system (e.g. supervisord or daemontools) to handle the `stdout` eventstream (e.g. uploading it to S3 or Google Storage). This sink is also useful for debugging
-2. **s3** - where events are collected by SnowCannon, and then regularly gzipped and uploaded to S3 by SnowCannon itself
-3. **fluentd** - where events are sent by SnowCannon to [Fluentd] [fluentd], a lightweight log collector. Fluentd is then responsible for uploading the events to S3, Google Storage or equivalent
+1. **stdout** - events (and only events) are printed to `stdout`. Use your process control system (e.g. supervisord or daemontools) to handle the `stdout` eventstream (e.g. uploading it to S3 or Google Storage). Also useful for debugging
+2. **s3** - events are collected by SnowCannon, and then regularly gzipped and uploaded to S3 by SnowCannon itself
+3. **fluentd** - events are sent by SnowCannon to [Fluentd] [fluentd], a lightweight log collector. Configure Fluentd to forward the events on to S3, Google Storage or equivalent
 
 You can configure your event sink in the `config.js` file - to take each sink option in turn:
 
@@ -77,7 +77,7 @@ SnowCannon's event sink is set to **stdout** by default - you don't need to chan
 
 ### s3
 
-To change the event sink to **s3**, please set the `config.sink.out` variable like so:
+To change the event sink to **s3**, set the `config.sink.out` variable like so:
 
 ```javascript
 config.sink.out = "s3";
@@ -98,7 +98,7 @@ Note that you do not have to add your AWS access details into this file if they 
 
 ### fluentd
 
-To change the event sink to **fluentd**, please set the `config.sink.out` variable like so:
+To change the event sink to **fluentd**, set the `config.sink.out` variable like so:
 
 ```javascript
 config.sink.out = "fluentd";
@@ -106,7 +106,7 @@ config.sink.out = "fluentd";
 
 Depending on how you have configured Fluentd is configured, you should be able to leave the `config.sink.fluentd` variables untouched - they correspond to the Fluentd default configuration found in:
 
-    fluentd/fluent.conf
+    etc/fluentd/fluent.conf
 
 Please note that setting up and configuring Fluentd is out of scope of this README - but the SnowPlow team have included instructions on this as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide].
 
@@ -118,10 +118,13 @@ Tested on an Amazon EC2 Small with Siege, SnowCannon handles up to about 10,000 
 
 When deploying node.js apps to production, it is [generally recommended] [node-js-deployment] that you additionally setup:
 
-1. A **service wrapper** - e.g. [Forever] [forever] or [Upstart] [upstart]. A service wrapper runs a service in a separate process, starts it if the server reboots and restart the service if it dies
+1. A **service wrapper** - e.g. [Upstart] [upstart] or [Forever] [forever]. A service wrapper runs SnowCannon in a separate process and restarts SnowCannon if it dies
 2. A **process monitor** - e.g. [Monit] [monit] or [God] [god]. A utility for monitoring and managing processes; use it to send a simple HTTP request to SnowCannon and restart SnowCannon if it does not respond
 
-Setting up a service wrapper and process monitor is out of scope of this README; however the SnowPlow team have included instructions on setting up **Forever** and **Monit** as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide].
+Setting up a service wrapper and process monitor is out of scope of this README; however the SnowPlow team have included instructions on setting up **Upstart** and **Monit** as part of their [SnowCannon Setup Guide] [snowcannon-setup-guide]. Default Upstart and Monit configuration files can be found here:
+
+    etc/monit/monit.conf
+    etc/upstart/snowcannon.conf
 
 ## Roadmap
 
@@ -142,6 +145,7 @@ limitations under the License.
 
 [snowplow]: http://snowplowanalytics.com
 [snowplow-js]: https://github.com/snowplow/snowplow/tree/master/1-trackers/javascript
+[cloudfront-collector]: https://github.com/snowplow/snowplow/tree/master/2-collectors/cloudfront-collector
 [knox]: https://github.com/learnboost/knox
 [node-uuid]: https://github.com/broofa/node-uuid
 [measured]: https://npmjs.org/package/measured
