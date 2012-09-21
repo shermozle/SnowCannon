@@ -1,0 +1,11 @@
+description "snowcannon"
+
+start on startup
+stop on shutdown
+
+script
+    # node.js needs $HOME to be set
+    export HOME="path/to/node/app"
+
+    exec sudo -u nodejs /usr/local/bin/node path/to/node/app/server.js production 2>>/var/log/app_name.error.log >>/var/log/app_name.log
+end script
