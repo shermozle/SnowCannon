@@ -12,11 +12,11 @@
 /**
  * SnowCannon
  *
- * node.js web analytics data collection server for SnowPlow.
- * Logs web analytics beacons to gzipped files in S3.
- *
- * Depends on the following NPM packages:
- * npm install knox node-uuid measured fluent-logger
+ * Event collector server for SnowPlow
+ * by Simon Rumble <simon@simonrumble.com>
+ * 
+ * For documentation, see README.md
+ * For dependencies,  see package.json
  */
 var http = require('http');
 var url = require('url');
@@ -29,6 +29,8 @@ var config = require('./config');
 var cookieManager = require('./libs/cookie-manager');
 var responses = require('./libs/responses');
 var s3Sink = require('./libs/s3-sink');
+
+var pjson = require('./package.json');
 
 /**
  * Don't pollute stdout if it's being used to capture
@@ -75,7 +77,8 @@ var buildEvent = function(request, cookies, timestamp) {
         "uuid" : cookies.sp,
         "url" : request.url,
         "cookies" : cookies,
-        "headers" : request.headers
+        "headers" : request.headers,
+        "collector" : collector
     });
     return event;
 }
@@ -101,20 +104,26 @@ switch(config.sink.out) {
             port: config.sink.fluentd.port,
             timeout: config.sink.fluentd.timeout
         });
+        break;
     default:
 }
 
 // Get the hostname
 var hostname = os.hostname();
 
+// Identify this collector
+var collector = pjson.name + "-" + pjson.version
+
 // Setup our server monitoring
-var stats = measured.createCollection();
-var memory = new measured.Gauge(function() {
-  return process.memoryUsage().rss;
-});
-var uptime = new measured.Gauge(function() {
-  return Math.round(process.uptime());
-});
+var monitoring = {
+    "stats": measured.createCollection(),
+    "memory": new measured.Gauge(function() {
+        return process.memoryUsage().rss;
+    }),
+    "uptime": new measured.Gauge(function() {
+        return Math.round(process.uptime());
+    })
+}
 
 // Web server that does the magic
 http.createServer(function (request, response) {
@@ -123,11 +132,12 @@ http.createServer(function (request, response) {
     var now = new Date().toISOString();
 
     // Add to metrics
-    stats.meter('requestsPerSecond').mark();
+    monitoring.stats.meter('requestsPerSecond').mark();
 
     // Switch based on requested URL
     switch(url.parse(request.url).pathname) {
 
+        // ice.png is legacy name for i
         case '/ice.png':
 		case '/i':
             var cookies = cookieManager.getCookies(request.headers);
@@ -144,7 +154,7 @@ http.createServer(function (request, response) {
             break;
 
         case '/status':
-            responses.sendStatus(response, hostname, stats, memory, uptime);
+            responses.sendStatus(response, hostname, collector, monitoring);
             break;
 
         default:

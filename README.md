@@ -34,15 +34,15 @@ SnowCannon depends on the following NPM packages:
 * [measured] [measured], for SnowCannon performance metrics
 * [fluent-logger] [fluent-logger], for logging events to [Fluentd] [fluentd]
 
-Note that _using_ Fluentd for logging is optional - but the dependency is required.
+Note that _using_ Fluentd or Knox for logging is optional - but the dependencies are required.
 
 ## Getting started
 
 First, you need to [install Node.js] [node-install].
 
-Next, install the dependent modules:
+Next, install SnowCannon:
 
-    $ npm install knox node-uuid measured fluent-logger
+    $ npm install snowcannon
 
 And finally run it:
 
