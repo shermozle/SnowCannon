@@ -29,9 +29,9 @@ config.cookie.domainName = undefined;
  * Which sink will we use for collected events?
  * - s3 means SnowCannon will handle compression and upload to S3 itself
  * - stdout means SnowCannon will log events to stdout. Use your process control system (e.g. supervisord, daemontools, Angel) to handle the stdout eventstream
- * - fluentd means SnowCannon will use Fluentd (http://fluentd.org/) to log events. NOT YET SUPPORTED
+ * - fluentd means SnowCannon will use Fluentd (http://fluentd.org/) to collect events
  */
-config.sink.out = "stdout"; // Or "s3". "fluentd" NOT YET SUPPORTED
+config.sink.out = "stdout"; // Or "s3" or "fluentd"
 
 /*
  * S3 configuration
@@ -49,7 +49,6 @@ config.sink.s3.secret = process.env.AWS_SECRET_KEY || 'SECRET GOES HERE IF ENV N
 
 /**
  * Fluentd configuration
- * NOT YET SUPPORTED
  */
 
 // Host running Fluentd daemon
@@ -60,6 +59,12 @@ config.sink.fluentd.port = 24224;
 
 // Timeout for contacting the Fluentd daemon
 config.sink.fluentd.timeout = 3.0;
+
+// What primary tag should we use?
+config.sink.fluentd.mainTag = "snowplow";
+
+// What secondary tag should we use?
+config.sink.fluentd.subTag = "event"
 
 /**
  * All-important export of config.

@@ -22,7 +22,7 @@ s3Sink.log = function(event) {
 	if (s3Log !== "") {
 		s3Log += "\n";
 	}
-	s3Log += (JSON.stringify(event));	
+	s3Log += event;	
 }
 
 /**
