@@ -12,23 +12,26 @@
 /**
  * SnowCannon
  *
- * node.js web analytics data collection server for SnowPlow.
- * Logs web analytics beacons to gzipped files in S3.
- *
- * Depends on the following NPM packages:
- * npm install knox node-uuid measured
+ * Event collector server for SnowPlow
+ * by Simon Rumble <simon@simonrumble.com>
+ * 
+ * For documentation, see README.md
+ * For dependencies,  see package.json
  */
-
 var http = require('http');
 var url = require('url');
 var os = require('os');
 
+var cluster = require('cluster');
 var measured = require('measured');
+var fluentdSink = require('fluent-logger');
 
 var config = require('./config');
 var cookieManager = require('./libs/cookie-manager');
 var responses = require('./libs/responses');
 var s3Sink = require('./libs/s3-sink');
+
+var pjson = require('./package.json');
 
 /**
  * Don't pollute stdout if it's being used to capture
@@ -46,14 +49,19 @@ var logToConsole = function(message) {
  * a line break
  */
 var logToSink = function(message) {
+    var json = JSON.stringify(message);
     switch(config.sink.out) {
         case 's3':
-            s3Sink.log(message);
+            s3Sink.log(json);
             break;
         case 'stdout':
-            console.log(JSON.stringify(message));
+            console.log(json);
             break;
-        // TODO: add in fluentd support here
+        case 'fluentd':
+            fluentdSink.emit(
+                config.sink.fluentd.subTag,
+                json
+            );
         default:
     }
 }
@@ -70,69 +78,111 @@ var buildEvent = function(request, cookies, timestamp) {
         "uuid" : cookies.sp,
         "url" : request.url,
         "cookies" : cookies,
-        "headers" : request.headers
+        "headers" : request.headers,
+        "collector" : collector
     });
     return event;
 }
 
 /**
-* If we are using the S3 sink, set a timeout to stuff the
-* in-memory events down the pipe to the S3 bucket.
-*/
-if (config.sink.out === "s3") {
-	setInterval(function () {
-		s3Sink.upload(config.sink.s3)
-	}, config.sink.s3.flushSeconds * 1000);
+ * One-time initialization for each sink type
+ */
+switch(config.sink.out) {
+    case 's3':
+        // Set a timeout to stuff the in-memory
+        // events down the pipe to the S3 bucket.
+        setInterval(function () {
+            s3Sink.upload(config.sink.s3)
+        }, config.sink.s3.flushSeconds * 1000);    
+        break;
+    case 'stdout':
+        // No init needed
+        break;
+    case 'fluentd':
+        // Configure the Fluentd logger
+        fluentdSink.configure(config.sink.fluentd.mainTag, {
+            host: config.sink.fluentd.host,  
+            port: config.sink.fluentd.port,
+            timeout: config.sink.fluentd.timeout
+        });
+        break;
+    default:
 }
 
 // Get the hostname
 var hostname = os.hostname();
 
-// Setup our server monitoring
-var stats = measured.createCollection();
-var memory = new measured.Gauge(function() {
-  return process.memoryUsage().rss;
-});
-var uptime = new measured.Gauge(function() {
-  return Math.round(process.uptime());
-});
+// Identify this collector
+var collector = pjson.name + "-" + pjson.version
 
-// Web server that does the magic
-http.createServer(function (request, response) {
+// How many CPUs?
+var numCPUs = os.cpus().length;
 
-    // Timestamp for this request
-    var now = new Date().toISOString();
+/**
+ * Setup our server monitoring
+ */
+var monitoring = {
+    "stats": measured.createCollection(),
+    "memory": new measured.Gauge(function() {
+        return process.memoryUsage().rss;
+    }),
+    "uptime": new measured.Gauge(function() {
+        return Math.round(process.uptime());
+    })
+}
 
-    // Add to metrics
-    stats.meter('requestsPerSecond').mark();
-
-    // Switch based on requested URL
-    switch(url.parse(request.url).pathname) {
-
-        case '/ice.png':
-		case '/i':
-            var cookies = cookieManager.getCookies(request.headers);
-            var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
-            
-            var event = buildEvent(request, cookies, now);
-            logToSink(event);
-
-            responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieContents);
-            break;
-
-        case '/healthcheck':
-            responses.send200(response);
-            break;
-
-        case '/status':
-            responses.sendStatus(response, hostname, stats, memory, uptime);
-            break;
-
-        default:
-            responses.send404(response);
+/**
+ * Roll our own clustering
+ */
+if (cluster.isMaster) {
+    // Fork workers
+    for (var i = 0; i < numCPUs; i++) {
+        cluster.fork();
     }
+    cluster.on('exit', function(worker, code, signal) {
+        logToConsole('SnowCannon worker ' + worker.pid + ' died');
+    });
 
-    // Log the request to console
-    logToConsole(now + ' ' + request.url);
+} else {
+    // Workers can share any TCP connection
+    // In this case its a HTTP server
+    http.createServer(function (request, response) {
 
-}).listen(config.server.httpPort);
+        // Timestamp for this request
+        var now = new Date().toISOString();
+
+        // Add to metrics
+        monitoring.stats.meter('requestsPerSecond').mark();
+
+        // Switch based on requested URL
+        switch(url.parse(request.url).pathname) {
+
+            // ice.png is legacy name for i
+            case '/ice.png':
+    		case '/i':
+                var cookies = cookieManager.getCookies(request.headers);
+                var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
+                
+                var event = buildEvent(request, cookies, now);
+                logToSink(event);
+
+                responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieContents);
+                break;
+
+            case '/healthcheck':
+                responses.send200(response);
+                break;
+
+            case '/status':
+                responses.sendStatus(response, hostname, collector, numCPUs, monitoring);
+                break;
+
+            default:
+                responses.send404(response);
+        }
+
+        // Log the request to console
+        logToConsole(now + ' ' + request.url);
+
+    }).listen(config.server.httpPort);
+}
