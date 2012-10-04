@@ -4,10 +4,11 @@
 
 SnowCannon is an event collector server for [SnowPlow] [snowplow], written in node.js by Simon Rumble <simon@simonrumble.com>.
 
-There are two benefits of using SnowCannon over SnowPlow's [CloudFront-based collector] [cloudfront-collector]:
+There are three benefits of using SnowCannon over SnowPlow's [CloudFront-based collector] [cloudfront-collector]:
 
 1. Allows use of a third-party cookie, making user tracking across domains possible for all except mobile Safari. This is something even the Google Analytics JS-set cookies approach struggles with
 2. Enables real-time analytics, if you want it. CloudFront has 10-20 minute delays to get the logs into S3
+3. Supports (via [Fluentd] [fluentd]) saving SnowPlow events to data stores other than Amazon S3 - e.g. Google Storage or Cassandra
 
 ## How SnowCannon works
 
