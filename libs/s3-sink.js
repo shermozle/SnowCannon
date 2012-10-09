@@ -47,13 +47,13 @@ s3Sink.upload = function(config) {
 
 				req.on('response', function(res){
 					if (200 == res.statusCode) {
-						console.log('saved to %s', req.url);
+						console.log('Saved to %s', req.url);
 		 			} else {
-		 				console.log('Saving to S3 failed statusCode: ' + res.statusCode)
+		 				console.error('Saving to S3 failed statusCode: ' + res.statusCode)
 		 			}
 				});
 				req.on('error', function(err){
-				    console.log("S3 Error: " +  err);
+				    console.error("S3 error: " +  err);
 				});
 				req.end(buffer);
 			}

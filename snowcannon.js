@@ -140,7 +140,7 @@ if (cluster.isMaster) {
         cluster.fork();
     }
     cluster.on('exit', function(worker, code, signal) {
-        logToConsole('SnowCannon worker ' + worker.pid + ' died');
+        console.error('SnowCannon worker ' + worker.process.pid + ' died');
     });
 
 } else {
@@ -159,7 +159,7 @@ if (cluster.isMaster) {
 
             // ice.png is legacy name for i
             case '/ice.png':
-    		case '/i':
+            case '/i':
                 var cookies = cookieManager.getCookies(request.headers);
                 var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
                 
