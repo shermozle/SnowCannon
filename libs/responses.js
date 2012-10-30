@@ -36,7 +36,7 @@ responses.sendCookieAndPixel = function(response, cookieId, cookieDuration, cook
  	// Write out the cookie
 	response.writeHead(200, {
  		'Set-Cookie': 'sp=' + cookieId + '; expires='+ new Date(new Date().getTime()+cookieDuration).toUTCString() + ';' + cookieContents,
- 		'P3P': 'policyref="/w3c/p3p.xml", CP="NOI DSP COR NID PSA OUR IND COM NAV STA',
+ 		'P3P': 'policyref="/w3c/p3p.xml", CP="NOI DSP COR NID PSA OUR IND COM NAV STA"',
  		'Content-Type': 'image/gif',
         'Content-Length': imageData.length
 	});
