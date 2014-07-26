@@ -43,6 +43,22 @@ responses.sendCookieAndPixel = function(response, cookieId, cookieDuration, cook
 	// Send pixel
 	response.end(imageBuffer);
 }
+/*
+* Try to set a cookie and redirect back to /r
+*/
+responses.testCookie = function(response, cookieId, request, cookieDuration, cookieContents) {
+
+    request.pathname = '/r';
+
+    // Write out the cookie
+    response.writeHead(200, {
+        'Set-Cookie': 'sp=' + cookieId + '; expires='+ new Date(new Date().getTime()+cookieDuration).toUTCString() + ';' + cookieContents,
+        'P3P': 'policyref="/w3c/p3p.xml", CP="NOI DSP COR NID PSA OUR IND COM NAV STA"',
+        'Location': request
+    });
+    // Send pixel
+    response.end(imageBuffer);
+}
 
 /**
  * Respond with server status.

@@ -41,7 +41,7 @@ var logToConsole = function(message) {
     if (config.sink.out !== "stdout") {
         console.log(message);
     }
-}
+};
 
 /**
  * Logs to the current sink, with sink-specific
@@ -64,13 +64,13 @@ var logToSink = function(message) {
             );
         default:
     }
-}
+};
 
 /**
  * Build the event to log
  */
 var buildEvent = function(request, cookies, timestamp) {
-    var event = [];    
+    var event = [];
     event.push( {
         "hostname" : hostname,
         "date" : timestamp.split('T')[0],
@@ -82,7 +82,7 @@ var buildEvent = function(request, cookies, timestamp) {
         "collector" : collector
     });
     return event;
-}
+};
 
 /**
  * One-time initialization for each sink type
@@ -92,7 +92,7 @@ switch(config.sink.out) {
         // Set a timeout to stuff the in-memory
         // events down the pipe to the S3 bucket.
         setInterval(function () {
-            s3Sink.upload(config.sink.s3)
+            s3Sink.upload(config.sink.s3);
         }, config.sink.s3.flushSeconds * 1000);    
         break;
     case 'stdout':
@@ -113,7 +113,7 @@ switch(config.sink.out) {
 var hostname = os.hostname();
 
 // Identify this collector
-var collector = pjson.name + "-" + pjson.version
+var collector = pjson.name + "-" + pjson.version;
 
 // How many CPUs?
 var numCPUs = os.cpus().length;
@@ -129,7 +129,7 @@ var monitoring = {
     "uptime": new measured.Gauge(function() {
         return Math.round(process.uptime());
     })
-}
+};
 
 /**
  * Roll our own clustering
@@ -158,15 +158,25 @@ if (cluster.isMaster) {
         switch(url.parse(request.url).pathname) {
 
             // ice.png is legacy name for i
+            // We use /i for the initial query, but if they don't have a cookie set, we set the cookie and redirect back to /r
+            // which then logs it without a network_userid value so it'll fall back to domain_userid. Yes I know Crockford says
+            // not to do this with case statements.
             case '/ice.png':
             case '/i':
+            case '/r':
                 var cookies = cookieManager.getCookies(request.headers);
                 var cookieContents = cookieManager.getCookieContents(config.cookie.domainName);
                 
                 var event = buildEvent(request, cookies, now);
-                logToSink(event);
 
-                responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieContents);
+                if ((cookies.sp && cookies.age !== 'new') || url.parse(request.url).pathname === '/r') {
+                    responses.sendCookieAndPixel(response, cookies.sp, config.cookie.milliseconds, cookieContents);
+                    logToSink(event);
+                } else {
+                    // TODO: Find out the protocol and use the appropriate one?
+                    var redirectUrl = 'http://' + request.headers.host + url.parse(request.url).search;
+                    responses.testCookie(response, cookies.sp, redirectUrl, config.cookie.milliseconds, cookieContents);
+                }
                 break;
 
             case '/healthcheck':

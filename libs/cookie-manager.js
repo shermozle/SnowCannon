@@ -17,6 +17,7 @@ cookieManager.getCookies = function(headers) {
   	// If there's no "sp" cookie, create a UUID for it
 	if (cookies.sp === undefined) {
 		cookies.sp = uuid.v4();
+		cookies.age = 'new';
 	}
 
     return cookies;
